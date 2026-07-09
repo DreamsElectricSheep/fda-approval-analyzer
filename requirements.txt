@@ -1,0 +1,4 @@
+requests
+flask
+yfinance
+beautifulsoup4

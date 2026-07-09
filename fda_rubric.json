@@ -1,0 +1,81 @@
+{
+  "version": "1.0.0",
+  "created": "2026-07-02",
+  "name": "Universal FDA Approval Scoring Rubric",
+  "note": "Canonical on-disk rubric. Max 100 pts across 5 sections, minus risk deductions. See probability_bands for score->approval-probability mapping.",
+  "sections": [
+    {
+      "id": 1,
+      "name": "Clinical Evidence Quality",
+      "max": 25,
+      "criteria": [
+        {"key": "primary_endpoint_met", "max": 8, "desc": "Primary endpoint met with statistical significance (p<0.05). Partial for trend/p<0.10."},
+        {"key": "effect_size", "max": 5, "desc": "Clinically meaningful effect size, not just statistical (e.g. OS/PFS magnitude, responder rate)."},
+        {"key": "trial_design", "max": 5, "desc": "Randomized, double-blind, placebo/active-controlled, adequately powered Phase 3. Deduct for single-arm, open-label, underpowered."},
+        {"key": "replication", "max": 4, "desc": "Two adequate & well-controlled trials, or one + confirmatory evidence (FDA's usual bar)."},
+        {"key": "safety_profile", "max": 3, "desc": "Acceptable safety; no dose-limiting or black-box-tier signals relative to indication severity."}
+      ]
+    },
+    {
+      "id": 2,
+      "name": "Regulatory Process Signals",
+      "max": 25,
+      "criteria": [
+        {"key": "designations", "max": 6, "desc": "Breakthrough / Fast Track / RMAT / Orphan / Priority Review granted."},
+        {"key": "special_protocol", "max": 5, "desc": "SPA agreement in place, or documented End-of-Phase-2 alignment on endpoints."},
+        {"key": "advisory_committee", "max": 6, "desc": "Positive AdCom vote, or FDA declined to convene one (often a good sign). Negative vote = large deduction."},
+        {"key": "prior_interactions", "max": 4, "desc": "No prior CRL for this indication; FDA feedback consistent, no shifting goalposts."},
+        {"key": "pdufa_clarity", "max": 4, "desc": "Filing accepted, PDUFA date set, no Refuse-to-File or major review-clock extensions."}
+      ]
+    },
+    {
+      "id": 3,
+      "name": "Manufacturing & CMC Readiness",
+      "max": 20,
+      "criteria": [
+        {"key": "facility_inspection", "max": 7, "desc": "Manufacturing site passed FDA pre-approval inspection (no OAI/483 open items)."},
+        {"key": "cmc_stability", "max": 6, "desc": "Stability, potency, and comparability data complete; process validated at commercial scale."},
+        {"key": "supply_chain", "max": 4, "desc": "Second-source / capacity in place; no single-point API dependency flagged."},
+        {"key": "cmc_history", "max": 3, "desc": "No prior CMC-driven CRL or manufacturing consent decree."}
+      ]
+    },
+    {
+      "id": 4,
+      "name": "Company Behavior Signals",
+      "max": 15,
+      "criteria": [
+        {"key": "insider_activity", "max": 4, "desc": "Insider buying / no unusual pre-PDUFA selling; aligned incentives."},
+        {"key": "financing_posture", "max": 4, "desc": "Funded through decision + launch; not raising desperately at a discount right before PDUFA."},
+        {"key": "management_credibility", "max": 4, "desc": "Team has prior approvals; consistent, non-promotional communication; no hype/pump pattern."},
+        {"key": "partnership", "max": 3, "desc": "Big-pharma partner or commercialization deal signals external DD passed."}
+      ]
+    },
+    {
+      "id": 5,
+      "name": "External Validation",
+      "max": 15,
+      "criteria": [
+        {"key": "kol_support", "max": 4, "desc": "Key opinion leaders / treating physicians publicly supportive; unmet need acknowledged."},
+        {"key": "peer_review", "max": 4, "desc": "Pivotal data published in a reputable peer-reviewed journal, not just press release / poster."},
+        {"key": "analyst_consensus", "max": 3, "desc": "Sell-side / specialist consensus leans approval; not a pure retail-driven thesis."},
+        {"key": "precedent", "max": 4, "desc": "Mechanism/indication has approved precedent, or clear regulatory pathway exists."}
+      ]
+    }
+  ],
+  "risk_deductions": [
+    {"key": "prior_crl", "points": -20, "desc": "Complete Response Letter previously issued for this indication."},
+    {"key": "going_concern", "points": -5, "desc": "Going-concern warning / <6mo cash runway."},
+    {"key": "clinical_hold", "points": -15, "desc": "Active or recent FDA clinical hold."},
+    {"key": "negative_adcom", "points": -15, "desc": "Advisory committee voted against approval."},
+    {"key": "safety_death_signal", "points": -20, "desc": "Treatment-related deaths / unresolved serious safety signal."},
+    {"key": "integrity_flag", "points": -15, "desc": "Data-integrity findings, credible fraud allegations, or SEC action."},
+    {"key": "single_pivotal_weak", "points": -8, "desc": "Only one underpowered pivotal trial where two are expected."}
+  ],
+  "probability_bands": [
+    {"min": 80, "max": 100, "approval_prob": "85-95%", "label": "Very likely approval"},
+    {"min": 65, "max": 79,  "approval_prob": "65-80%", "label": "Likely approval"},
+    {"min": 50, "max": 64,  "approval_prob": "45-65%", "label": "Coin-flip / lean approve"},
+    {"min": 35, "max": 49,  "approval_prob": "25-45%", "label": "Lean reject"},
+    {"min": -100, "max": 34, "approval_prob": "<25%", "label": "Likely reject"}
+  ]
+}

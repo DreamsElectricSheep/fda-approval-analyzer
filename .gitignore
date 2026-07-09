@@ -1,0 +1,20 @@
+# secrets
+.env
+
+# runtime cache / output — not schema, not code
+fda_scores/
+*_scores/
+biotech_catalysts.json
+*_corpus.json
+*_corpus.txt
+*_state.json
+ihub_probe_results.json
+
+# logs
+*.log
+
+# python
+__pycache__/
+*.pyc
+.venv/
+venv/
