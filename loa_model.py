@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
-loa_model.py — historically-grounded Likelihood of Approval (LoA) + time-to-decision.
+loa_model.py: historically-grounded Likelihood of Approval (LoA) + time-to-decision.
 
 The "approval odds" and "timeline" metrics are anchored to PUBLISHED historical FDA
-drug-approval statistics, not to hand-waved heuristics. This is base-rate modelling —
+drug-approval statistics, not to hand-waved heuristics. This is base-rate modelling,
 the same method professional LoA models use: start from the empirical approval rate
 for a drug's development stage, then adjust for the factors history shows matter most
 (therapeutic area, special designations, prior CRL). It is NOT a claim of proprietary
@@ -24,7 +24,7 @@ evidence score (fda_analyzer) is the drug-specific layer that sits on top of thi
 
 CONFIDENCE NOTE (be honest about what's grounded vs approximate):
   • STRONG: the per-phase base rates (STAGE_LOA) are the published BIO transition rates,
-    correctly compounded — these are the load-bearing numbers.
+    correctly compounded; these are the load-bearing numbers.
   • APPROXIMATE: the TA / designation / CRL multipliers are directionally supported by
     the literature but the specific coefficients are hand-set, not fitted. They are
     applied with a STAGE TAPER (see STAGE_MODIFIER_WEIGHT): the TA/designation effect is
@@ -242,7 +242,7 @@ def _parse_prob_range(text):
 
 def rubric_total_to_prob(total, rubric):
     """Continuous, monotonic score(0-100) -> probability(0-100) mapping, built by
-    linearly interpolating across the rubric's OWN probability_bands boundaries —
+    linearly interpolating across the rubric's OWN probability_bands boundaries;
     avoids the coarse step-function jump a band lookup gives right at e.g. 49 vs 50."""
     bands = rubric.get('probability_bands', [])
     if not bands:

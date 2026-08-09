@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-fda_analyzer.py — score a biotech's FDA approval odds against a structured rubric.
+fda_analyzer.py: score a biotech's FDA approval odds against a structured rubric.
 
 Usage:  fda_analyzer.py TICKER [--drug "Drug Name"] [--indication "..."]
         fda_analyzer.py MNKD --drug Afrezza
@@ -63,7 +63,7 @@ _EDGAR_MAX_DOCS = 4
 
 def _edgar_search(params):
     """Shared retry-with-backoff wrapper for EDGAR full-text search. Returns hits[]
-    or [] after 3 failed attempts (logged — a failure no longer looks identical to
+    or [] after 3 failed attempts (logged: a failure no longer looks identical to
     a genuinely empty result, which previously masked a transient outage as
     "no evidence found" and produced a hollow, misleadingly neutral rubric score)."""
     r = None
@@ -76,7 +76,7 @@ def _edgar_search(params):
             if r.status_code in (429, 500, 503):
                 log(f'EDGAR {r.status_code} for {params.get("q")}, retry {attempt+1}/3')
                 time.sleep(1.5 * (attempt + 1)); continue
-            log(f'EDGAR {r.status_code} for {params.get("q")} — not retrying'); return []
+            log(f'EDGAR {r.status_code} for {params.get("q")}: not retrying'); return []
         except Exception as e:
             log(f'EDGAR fetch exception for {params.get("q")} (attempt {attempt+1}/3): {e}')
             time.sleep(1.5)
@@ -89,7 +89,7 @@ def fetch_edgar(ticker):
     certification) doesn't crowd out the recent 8-K that actually carries the
     PDUFA/CRL/trial-result news. An earlier version fetched only filing headlines,
     which handed the LLM lines like "8-K 2026-06-29: Company Name" with zero
-    substantive content — every rubric criterion then defaulted to the neutral 0.5
+    substantive content; every rubric criterion then defaulted to the neutral 0.5
     fraction, producing a flat 50/100 "coin-flip" score that wasn't a real
     assessment at all, just the fallback for having nothing to read.
     """
@@ -99,10 +99,10 @@ def fetch_edgar(ticker):
     hits = _edgar_search({'q': ticker, 'forms': '10-K,10-Q,8-K',
                           'startdt': start, 'enddt': end})
     if not hits:
-        # fall back to no date filter — better an old filing than nothing
+        # fall back to no date filter: better an old filing than nothing
         hits = _edgar_search({'q': ticker, 'forms': '10-K,10-Q,8-K'})
     # Newest first, then 8-Ks first (stable sort composes: 8-Ks bubble to the top,
-    # each group still newest-first) — 8-Ks carry event-driven regulatory news
+    # each group still newest-first). 8-Ks carry event-driven regulatory news
     # (PDUFA/CRL/topline), which matters more here than routine 10-K/10-Q filings.
     hits.sort(key=lambda h: h.get('_source', {}).get('file_date', ''), reverse=True)
     hits.sort(key=lambda h: h.get('_source', {}).get('form') != '8-K')
@@ -127,12 +127,12 @@ def fetch_edgar(ticker):
             except Exception as e:
                 log(f'EDGAR doc fetch failed ({form} {fdate}): {e}')
         out.append({'form': form, 'date': fdate,
-                    'excerpt': excerpt or '(document text unavailable — headline only)'})
+                    'excerpt': excerpt or '(document text unavailable, headline only)'})
     return out
 
 def fetch_clinicaltrials(query):
     """Recent trials matching the drug/company; pull design + status. Same retry
-    treatment as fetch_edgar — a transient failure here previously looked
+    treatment as fetch_edgar; a transient failure here previously looked
     identical to "genuinely no trials exist"."""
     out = []
     r = None
@@ -145,7 +145,7 @@ def fetch_clinicaltrials(query):
             if r.status_code in (429, 500, 503):
                 log(f'ClinicalTrials {r.status_code} for {query!r}, retry {attempt+1}/3')
                 time.sleep(1.5 * (attempt + 1)); continue
-            log(f'ClinicalTrials {r.status_code} for {query!r} — not retrying'); return out
+            log(f'ClinicalTrials {r.status_code} for {query!r}: not retrying'); return out
         except Exception as e:
             log(f'ClinicalTrials fetch exception for {query!r} (attempt {attempt+1}/3): {e}')
             time.sleep(1.5)
@@ -170,7 +170,7 @@ def fetch_clinicaltrials(query):
         log(f'ClinicalTrials parse failed for {query!r}: {e}')
     return out
 
-# ── community corpus (the real edge — EDGAR+CT alone score "sparse") ─────────
+# ── community corpus (the real edge: EDGAR+CT alone score "sparse") ─────────
 CORPUS_KEYWORDS = [
     'fda', 'pdufa', 'approval', 'approved', 'crl', 'complete response',
     'adcom', 'advisory committee', 'phase 3', 'phase iii', 'endpoint',
@@ -329,7 +329,7 @@ def main():
                                       edgar, trials, corpus_excerpts), key)
     ext = parse_json(raw)
     if not ext:
-        log('Gemini extraction failed — cannot score'); return 1
+        log('Gemini extraction failed; cannot score'); return 1
 
     result = score(rubric, ext)
     out = {'ticker': args.ticker, 'drug': args.drug, 'indication': args.indication,
@@ -342,7 +342,7 @@ def main():
     fn = f"{OUT_DIR}/{args.ticker}_{datetime.now().strftime('%Y%m%d')}.json"
     json.dump(out, open(fn, 'w'), indent=2)
 
-    print(f"\n{'='*54}\n  FDA APPROVAL SCORE — {args.ticker} {('('+args.drug+')') if args.drug else ''}\n{'='*54}")
+    print(f"\n{'='*54}\n  FDA APPROVAL SCORE: {args.ticker} {('('+args.drug+')') if args.drug else ''}\n{'='*54}")
     for s in result['sections']:
         print(f"  §{s['id']} {s['name']:<32} {s['score']:>5.1f} / {s['max']}")
     for d in result['deductions']:
@@ -355,9 +355,9 @@ def main():
         tg_token = os.environ.get('TELEGRAM_TOKEN')
         tg_chat = os.environ.get('TELEGRAM_CHAT_ID')
         if not tg_token or not tg_chat:
-            print('Set TELEGRAM_TOKEN/TELEGRAM_CHAT_ID env vars to enable alerts — skipping Telegram send.')
+            print('Set TELEGRAM_TOKEN/TELEGRAM_CHAT_ID env vars to enable alerts; skipping Telegram send.')
         else:
-            lines = [f"🧬 *FDA SCORE — {args.ticker}* {args.drug}",
+            lines = [f"🧬 *FDA SCORE: {args.ticker}* {args.drug}",
                      f"*{result['total']:.0f}/100* → {result['band']['approval_prob']} ({result['band']['label']})"]
             for s in result['sections']:
                 lines.append(f"  §{s['id']} {s['name']}: {s['score']:.0f}/{s['max']}")

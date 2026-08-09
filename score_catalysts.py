@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-score_catalysts.py — batch-score a catalyst list through fda_analyzer, so a
+score_catalysts.py: batch-score a catalyst list through fda_analyzer, so a
 dashboard's "Approval odds" sort has data for every name.
 
 Reads biotech_catalysts.json, runs fda_analyzer.py on each ticker (skipping any
@@ -41,7 +41,7 @@ def main():
     args = ap.parse_args()
 
     if not CATALYSTS.exists():
-        log.error('no biotech_catalysts.json — run biotech_catalyst_scanner first'); return 1
+        log.error('no biotech_catalysts.json: run biotech_catalyst_scanner first'); return 1
     rows = json.load(open(CATALYSTS)).get('catalysts', [])
     rows = [r for r in rows if r.get('max_severity', 0) >= args.min_severity]
     if args.limit:

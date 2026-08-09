@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """
-ihub_corpus_builder.py — build/grow a per-ticker investor-community corpus from
+ihub_corpus_builder.py: build/grow a per-ticker investor-community corpus from
 InvestorsHub, with NO login (public single-message pages + the board RSS feed).
 
 Why this exists: fda_analyzer.py scores "sparse" on EDGAR+ClinicalTrials alone.
-Its load_corpus_excerpts() already auto-loads {ticker.lower()}_corpus.json — this
+Its load_corpus_excerpts() already auto-loads {ticker.lower()}_corpus.json; this
 script produces exactly that file for ANY biotech with an iHub board.
 
 How it works (all no-login):
@@ -14,7 +14,7 @@ How it works (all no-login):
      is a public page; the body lives in <... class="col-message">.
   (The batch board view read_msgs.aspx and the board landing page are login-gated,
    so we ride the 50-post RSS window and ACCUMULATE it across scheduled runs into a
-   growing corpus — dedup by content hash. Deep backfill would need Google-indexed
+   growing corpus; dedup by content hash. Deep backfill would need Google-indexed
    seed IDs; the recent window is the high-signal part for a live approval score.)
 
 Rate-limiting / ToS-respectful design: requests are paced with a base delay plus
@@ -45,12 +45,12 @@ DELAY = 3.0   # base per-request delay (+ jitter); deliberately gentle on iHub's
 MIN_LENGTH = 150
 
 # Seed board map (board_id is permanent once known; find new ones via Google dork
-# `site:investorshub.advfn.com TICKER` — the board URL ends in -<board_id>).
+# `site:investorshub.advfn.com TICKER`: the board URL ends in -<board_id>).
 IHUB_BOARDS = {
     'MNKD': 10856,  # MannKind Corp (Afrezza)
     'NVAX': 1758,   # Novavax
     'SAVA': 9538,   # Cassava Sciences
-    'DNDN': 4140,   # Dendreon (historical — Provenge)
+    'DNDN': 4140,   # Dendreon (historical, Provenge)
 }
 
 ANALYTICAL_KEYWORDS = {
@@ -152,7 +152,7 @@ def fetch_message(mid, ticker):
     return {'date': date or '', 'text': body[:2000]}
 
 
-# Cross-board promo/wire spam that iHub injects onto every board — not community DD.
+# Cross-board promo/wire spam that iHub injects onto every board, not community DD.
 PROMO_MARKERS = (
     'issued on behalf of', 'pr newswire', 'globenewswire', 'equity-insider',
     'accesswire', 'newsfile corp', 'news commentary', 'sponsored', 'paid for by',
@@ -206,17 +206,17 @@ def main():
     rss = fetch_rss_ids(bid)
     log.info(f'{ticker}: {len(rss)} posts in RSS window')
     if not rss:
-        log.warning('empty RSS — nothing to do'); return 1
+        log.warning('empty RSS: nothing to do'); return 1
 
     added = 0
     consecutive_blocks = 0
     for mid, rss_date, _title in rss[:args.limit]:
         res = fetch_message(mid, ticker)
-        time.sleep(DELAY + random.uniform(0, 1.0))  # jitter — don't look metronomic
+        time.sleep(DELAY + random.uniform(0, 1.0))  # jitter, don't look metronomic
         if res == 'BLOCKED':
             consecutive_blocks += 1
             if consecutive_blocks >= 4:
-                log.warning(f'{ticker}: {consecutive_blocks} consecutive 403/429 from iHub — '
+                log.warning(f'{ticker}: {consecutive_blocks} consecutive 403/429 from iHub: '
                             f'backing off and ABORTING run to avoid an IP block. '
                             f'Saving what we have; retry later.')
                 break
@@ -239,7 +239,7 @@ def main():
     existing.sort(key=lambda e: e.get('date', ''), reverse=True)
     out_json.write_text(json.dumps(existing, indent=2))
 
-    lines = [f'IHUB {ticker} INVESTOR COMMUNITY — ANALYTICAL POSTS',
+    lines = [f'IHUB {ticker} INVESTOR COMMUNITY: ANALYTICAL POSTS',
              f'Total posts: {len(existing):,}   (source: investorshub.advfn.com board {bid})',
              '=' * 60, '']
     for e in existing:

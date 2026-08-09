@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-biotech_catalyst_scanner.py — find biotechs with LIVE FDA/regulatory catalysts.
+biotech_catalyst_scanner.py: find biotechs with LIVE FDA/regulatory catalysts.
 
 Answers "how do we find more biotech to score?" without a hand-maintained list.
 Engine: an industry-wide SEC EDGAR full-text sweep of recent 8-Ks for regulatory
@@ -8,8 +8,8 @@ event language (PDUFA, CRL, Breakthrough, AdCom, sBLA accepted, topline...). EDG
 returns the filer with its ticker + CIK inline, so every hit is ticker-resolved with
 no fuzzy company-name matching. Free, keyless.
 
-Output: biotech_catalysts.json — ranked [{ticker, company, catalysts[], latest_date,
-newest_filing_url}] — plus an optional Telegram top-N. This watchlist is what you then
+Output: biotech_catalysts.json, ranked [{ticker, company, catalysts[], latest_date,
+newest_filing_url}], plus an optional Telegram top-N. This watchlist is what you then
 feed to ihub_corpus_builder.py + fda_analyzer.py (the scoring half of the pipeline).
 
 Usage:
@@ -52,7 +52,7 @@ CATALYST_QUERIES = [
     ('"Priority Review"',            'Priority Review',           2),
 ]
 
-# Catalyst labels that only pharma/biotech companies ever file — presence of any one
+# Catalyst labels that only pharma/biotech companies ever file; presence of any one
 # confirms the ticker is biotech without a SIC lookup.
 PHARMA_EXCLUSIVE = {
     'PDUFA date set', 'CRL (rejection)', 'FDA accepted filing', 'BLA/sBLA activity',
@@ -303,7 +303,7 @@ def main():
             cik = cik_rev.get(r['ticker'])
             if cik:
                 # PDUFA dates are announced once (often months before the catalyst window)
-                # and merely referenced later — search a full year back to find the source.
+                # and merely referenced later; search a full year back to find the source.
                 pdufa_start = (end - timedelta(days=365)).isoformat()
                 pdufa = extract_pdufa_date(cik, pdufa_start, end.isoformat())
                 if pdufa:
@@ -331,7 +331,7 @@ def main():
     OUT_JSON.write_text(json.dumps(out, indent=2))
     log.info(f'{len(rows)} tickers with catalysts{price_note} → {OUT_JSON.name}')
 
-    print(f"\n{'='*84}\n  BIOTECH CATALYST SCAN — last {args.days}d{price_note} — {len(rows)} tickers\n{'='*84}")
+    print(f"\n{'='*84}\n  BIOTECH CATALYST SCAN: last {args.days}d{price_note}, {len(rows)} tickers\n{'='*84}")
     print(f"  {'TKR':6} {'$':>7} {'LoA':>4} {'stage':7} {'decision':10} {'days':>5}  catalysts")
     for r in rows[:25]:
         px = f"${r['price']:.2f}" if r.get('price') is not None else '   -'
@@ -344,14 +344,14 @@ def main():
         tg_token = os.environ.get('TELEGRAM_TOKEN')
         tg_chat = os.environ.get('TELEGRAM_CHAT_ID')
         if not tg_token or not tg_chat:
-            log.info('Set TELEGRAM_TOKEN/TELEGRAM_CHAT_ID env vars to enable alerts — skipping Telegram send.')
+            log.info('Set TELEGRAM_TOKEN/TELEGRAM_CHAT_ID env vars to enable alerts; skipping Telegram send.')
         else:
             top = rows[:12]
             lines = [f"🧬 *Biotech Catalyst Scan* (last {args.days}d{price_note}, {len(rows)} names)"]
             for r in top:
                 sev_emoji = {3: '🔴', 2: '🟠', 1: '🟡'}.get(r['max_severity'], '⚪')
                 px = f" ${r['price']:.2f}" if r.get('price') is not None else ''
-                lines.append(f"{sev_emoji} *{r['ticker']}*{px} {r['latest_date']} — {r['catalysts'][0]}")
+                lines.append(f"{sev_emoji} *{r['ticker']}*{px} {r['latest_date']}: {r['catalysts'][0]}")
             try:
                 requests.post(f'https://api.telegram.org/bot{tg_token}/sendMessage',
                               json={'chat_id': tg_chat, 'text': '\n'.join(lines),

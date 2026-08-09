@@ -16,8 +16,8 @@ How iHub IDs work:
 Known IDs (from Google):
   DNDN:  12080298, 19676719, 112650176   (board_id ~4140)
   MNKD:  107037385, 132630509, 145198208  (board_id ~10856)
-  NVAX:  (unknown — will probe)
-  SAVA:  (unknown — will probe)
+  NVAX:  (unknown, will probe)
+  SAVA:  (unknown, will probe)
 """
 
 import time, json, logging, sys, re, argparse
@@ -54,7 +54,7 @@ KNOWN_IDS = {
     'NVAX': {
         'board_id': 1758,
         'board_url': '/Novavax-Inc-NVAX-1758',
-        'sample_ids': [],   # unknown — will try to find from board page
+        'sample_ids': [],   # unknown, will try to find from board page
         'description': 'Novavax Inc',
     },
     'SAVA': {
@@ -129,7 +129,7 @@ def fetch_message(msg_id: int) -> dict | None:
     login_form = soup.find('form', action=re.compile(r'login|signin', re.IGNORECASE))
     login_redirect = 'login' in r.url.lower() or 'signin' in r.url.lower()
     if login_form or login_redirect:
-        log.info('Login wall detected — iHub requires authentication for messages')
+        log.info('Login wall detected: iHub requires authentication for messages')
         return {'blocked': True, 'reason': 'login_required'}
 
     # Extract board/ticker info from breadcrumb or title
@@ -309,7 +309,7 @@ def scrape_board(ticker: str, min_id: int, max_id: int) -> list[dict]:
     out_json.write_text(json.dumps(corpus, indent=2))
 
     lines = [
-        f'IHUB {ticker} INVESTOR COMMUNITY — ANALYTICAL POSTS',
+        f'IHUB {ticker} INVESTOR COMMUNITY: ANALYTICAL POSTS',
         f'Total posts extracted: {len(corpus):,}',
         f'Source: investorshub.advfn.com',
         '=' * 60, '',

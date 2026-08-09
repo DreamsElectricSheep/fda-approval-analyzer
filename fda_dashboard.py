@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 """
-fda_dashboard.py — paste a biotech ticker, get its FDA approval analysis + score.
+fda_dashboard.py: paste a biotech ticker, get its FDA approval analysis + score.
 
 Flask UI (port 5007) over fda_analyzer.py. Dark-themed dashboard with an SVG score
 ring and component bars. Tabs:
-  • Analyze  — paste ticker (+ optional drug/indication) -> score ring, stage pipeline,
+  • Analyze:   paste ticker (+ optional drug/indication) -> score ring, stage pipeline,
                5 rubric section bars w/ per-criterion justification, risk-deduction
                flags, evidence-quality badge. Cached per ticker/day from fda_scores/.
-  • Catalysts — the current micro-cap (<=$5) catalyst list from biotech_catalysts.json;
+  • Catalysts: the current micro-cap (<=$5) catalyst list from biotech_catalysts.json;
                each row is clickable -> jumps to Analyze and scores it.
 
 Runs fda_analyzer.py as a subprocess (Gemini feature-extractor + EDGAR + ClinicalTrials);
@@ -135,7 +135,7 @@ def analyze():
 
     # ONE final blended number: drug-specific evidence (rubric total) + historical
     # base rate for this stage (LoA), weighted by how much real evidence was found.
-    # This is the number to look at — the rest of the page is how it was built.
+    # This is the number to look at. The rest of the page is how it was built.
     loa_pct = result['_loa']['pct'] if result.get('_loa') else None
     result['_final'] = loa_model.final_approval_odds(
         result['total'], _RUBRIC, loa_pct, result.get('evidence_quality'))
@@ -169,7 +169,7 @@ def catalysts():
         r['score_band'] = sc['band'] if sc else None
         r['score_date'] = sc['date'] if sc else None
         r['rejected'] = 'CRL (rejection)' in r.get('catalysts', [])
-        # ONE blended odds number, same definition as the Analyze page — only
+        # ONE blended odds number, same definition as the Analyze page; only
         # available once this ticker has actually been analyzed (sc exists);
         # until then the base-rate-only loa_pct is the best we have.
         r['final_pct'] = None
@@ -334,10 +334,10 @@ tr.clk{cursor:pointer;transition:.12s}tr.clk:hover{background:rgba(59,130,246,.0
         </div>
       </div>
       <div class="card"><div class="card-title">Regulatory Stage</div><div class="pipe" id="pipe"></div></div>
-      <div class="card"><div class="card-title">Rubric Breakdown — drug-specific evidence (0–100)</div><div id="sections"></div></div>
+      <div class="card"><div class="card-title">Rubric Breakdown: drug-specific evidence (0–100)</div><div id="sections"></div></div>
       <div class="card" id="flagcard" style="display:none"><div class="card-title">Risk Deductions</div><div id="flags"></div></div>
       <div class="card" id="loacard" style="display:none">
-        <div class="card-title">Reference — Historical Base Rate &amp; Timeline <span class="not-this">(input to the number above, not a separate score)</span></div>
+        <div class="card-title">Reference: Historical Base Rate &amp; Timeline <span class="not-this">(input to the number above, not a separate score)</span></div>
         <div id="loabody"></div>
       </div>
       <div style="text-align:right"><button class="btn-sm" onclick="go(true)">↻ Re-run (bypass cache)</button></div>
@@ -418,7 +418,7 @@ function renderComposition(d){
   if(!fin){el.innerHTML='';return;}
   if(fin.loa_pct==null){
     el.innerHTML=`<div>This ticker isn't in the current catalyst scan, so there's no stage-based
-      historical rate to blend in — the number above is this drug's evidence-based read only.</div>`;
+      historical rate to blend in. The number above is this drug's evidence-based read only.</div>`;
     return;
   }
   const wPct=Math.round(fin.weight_evidence*100);
@@ -449,10 +449,10 @@ function renderLoa(d){
        <div class="loa-pct">${lo.pct}% of peers approved historically</div>
      </div>
      <div class="loa-side" style="margin-top:6px">
-       <div><b>Expected decision:</b> ${dd}${days!=null?' ('+days+' days)':''} — <i>${dsrc}</i></div>
+       <div><b>Expected decision:</b> ${dd}${days!=null?' ('+days+' days)':''}, <i>${dsrc}</i></div>
      </div>
      <div class="loa-basis">${(lo.basis||[]).map(x=>`<span>${x}</span>`).join('')}</div>
-     <div class="loa-note">Base rate anchored to published FDA approval statistics (BIO/Biomedtracker clinical success rates, FDA CDER) — one of the two inputs blended into the number at the top of the page. Model ${lo.model||''}.</div>`;
+     <div class="loa-note">Base rate anchored to published FDA approval statistics (BIO/Biomedtracker clinical success rates, FDA CDER), one of the two inputs blended into the number at the top of the page. Model ${lo.model||''}.</div>`;
 }
 function renderPipe(d){
   const stages=d._stages||[];const st=d._stage;
@@ -463,7 +463,7 @@ function renderPipe(d){
     else if(i===cur)cls+=' cur';
     else if(i<cur)cls+=' done';
     return `<div class="${cls}"><span class="dot"></span>${name}</div>`;
-  }).join('') + (st?'':`<div style="color:var(--muted);font-size:11px;padding-top:14px">not in current catalyst scan — stage unknown</div>`);
+  }).join('') + (st?'':`<div style="color:var(--muted);font-size:11px;padding-top:14px">not in current catalyst scan, stage unknown</div>`);
 }
 function renderSections(d){
   const byId={};(d.detail||[]).forEach(x=>{(byId[x.section]=byId[x.section]||[]).push(x);});
@@ -476,7 +476,7 @@ function renderSections(d){
       <div class="cval">${sec.score.toFixed(1)}</div></div>`;
     const det=byId[sec.id]||[];
     if(det.length)html+=`<div class="detail">`+det.map(x=>
-      `<div><b>${x.key.replace(/_/g,' ')}</b> ${x.awarded}/${x.max} — ${x.why||''}</div>`).join('')+`</div>`;
+      `<div><b>${x.key.replace(/_/g,' ')}</b> ${x.awarded}/${x.max}: ${x.why||''}</div>`).join('')+`</div>`;
   });
   document.getElementById('sections').innerHTML=html;
   setTimeout(()=>document.querySelectorAll('.fill').forEach(f=>f.style.width=f.dataset.w+'%'),60);
@@ -524,7 +524,7 @@ function renderCat(){
     h+=`<tr class="${cls}" onclick="pick('${r.ticker}')">
       <td><span class="tkr">${r.ticker}</span>${rej}</td>
       <td class="px">${px}</td>
-      <td class="scorecell" style="color:${probColor(odds)}" title="${confirmed?'blended: evidence + historical base rate':'not yet analyzed — historical base rate only, click to analyze'}">${oddsTxt}</td>
+      <td class="scorecell" style="color:${probColor(odds)}" title="${confirmed?'blended: evidence + historical base rate':'not yet analyzed: historical base rate only, click to analyze'}">${oddsTxt}</td>
       <td>${r.stage||'—'}</td>
       <td class="px" ${dtit}>${dd}</td>
       <td>${(r.catalysts||[]).slice(0,2).join(', ')}</td></tr>`;
